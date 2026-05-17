@@ -38,9 +38,9 @@ const KNOWLEDGE_CHANNEL_IDS = parseChannelIds(
   process.env.KNOWLEDGE_CHANNEL_IDS ?? process.env.KNOWLEDGE_CHANNEL_ID
 );
 const KNOWLEDGE_MESSAGES_LIMIT = 50;
-const KNOWLEDGE_CONTEXT_CHAR_LIMIT = 6000;
+const KNOWLEDGE_CONTEXT_CHAR_LIMIT = 14000;
 const KNOWLEDGE_ATTACHMENT_SIZE_LIMIT = 500000;
-const KNOWLEDGE_ATTACHMENT_CHAR_LIMIT = 10000;
+const KNOWLEDGE_ATTACHMENT_CHAR_LIMIT = 12000;
 const KNOWLEDGE_CACHE_TTL_MS = 5 * 60 * 1000;
 const DISCORD_MESSAGE_LIMIT = 2000;
 
@@ -120,12 +120,15 @@ function limitKnowledgeEntries(entries) {
   let totalLength = 0;
 
   for (let i = entries.length - 1; i >= 0; i--) {
-    if (!selected.length && entries[i].length > KNOWLEDGE_CONTEXT_CHAR_LIMIT) {
-      return entries[i].slice(0, KNOWLEDGE_CONTEXT_CHAR_LIMIT);
-    }
-
     const nextLength = totalLength + entries[i].length + 1;
-    if (nextLength > KNOWLEDGE_CONTEXT_CHAR_LIMIT) break;
+
+    if (nextLength > KNOWLEDGE_CONTEXT_CHAR_LIMIT) {
+      if (!selected.length) {
+        selected.unshift(entries[i].slice(0, KNOWLEDGE_CONTEXT_CHAR_LIMIT));
+      }
+
+      break;
+    }
 
     selected.unshift(entries[i]);
     totalLength = nextLength;

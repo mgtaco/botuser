@@ -38,7 +38,7 @@ const KNOWLEDGE_CHANNEL_IDS = parseChannelIds(
   process.env.KNOWLEDGE_CHANNEL_IDS ?? process.env.KNOWLEDGE_CHANNEL_ID
 );
 const KNOWLEDGE_MESSAGES_LIMIT = 50;
-const KNOWLEDGE_CONTEXT_CHAR_LIMIT = 14000;
+const KNOWLEDGE_CONTEXT_CHAR_LIMIT = 16000;
 const KNOWLEDGE_ATTACHMENT_SIZE_LIMIT = 500000;
 const KNOWLEDGE_ATTACHMENT_CHAR_LIMIT = 12000;
 const KNOWLEDGE_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -68,38 +68,6 @@ function formatMessage(msg, botId, botName) {
 
 function getBotDisplayName(message) {
   return message.guild?.members.me?.displayName ?? message.client.user.username;
-}
-
-function messageMentionsBot(message) {
-  return message.mentions.users.has(message.client.user.id);
-}
-
-function messageIncludesBotName(message, botName) {
-  const content = message.content?.toLowerCase() ?? '';
-  const names = [botName, message.client.user.username]
-    .filter(Boolean)
-    .map((name) => name.toLowerCase());
-
-  return names.some((name) => content.includes(name));
-}
-
-async function isReplyToBot(message) {
-  if (!message.reference?.messageId) return false;
-
-  try {
-    const ref = await message.channel.messages.fetch(message.reference.messageId);
-    return ref.author?.id === message.client.user?.id;
-  } catch {
-    return false;
-  }
-}
-
-async function shouldForceReply(message, botName) {
-  return (
-    messageMentionsBot(message) ||
-    messageIncludesBotName(message, botName) ||
-    await isReplyToBot(message)
-  );
 }
 
 async function buildConversationMessages(channel, botId, botName) {
@@ -292,7 +260,6 @@ client.on(Events.MessageCreate, async (message) => {
   if (RESPONSE_CHANNEL_IDS.size && !RESPONSE_CHANNEL_IDS.has(message.channelId)) return;
 
   const botName = getBotDisplayName(message);
-  const forceReply = await shouldForceReply(message, botName);
 
   const turns = await buildConversationMessages(
     message.channel,
@@ -304,7 +271,6 @@ client.on(Events.MessageCreate, async (message) => {
   const { reply } = await shouldRespondAndReply({
     messages: turns,
     botName,
-    forceReply,
     knowledgeContext,
   });
 

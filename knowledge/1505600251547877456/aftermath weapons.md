@@ -1,4 +1,4 @@
-| Type | Name | Capacity | Cartridge | Armor Penetration | Image (include in message whenever mentioning that weapon) |
+| Type | Name | Capacity | Cartridge | Armor Penetration | Image (include as a hyperlink whenever mentioning that weapon) |
 |:---:|:---:|:---:|:---:|:---:|:---:|
 | Semi-Automatic Carbine | 10/22 Takedown | 25 | .22 LR | 10% | https://static.wikia.nocookie.net/quarantine-aftermath/images/b/b1/10-22-Takedown-NEW.png/revision/latest?format=original |
 | Integrally Suppressed Assault Rifle | AS-VAL | 30 | 9x39MM | 75% | https://static.wikia.nocookie.net/quarantine-aftermath/images/f/f9/AS-VAL.png/revision/latest?format=original |
@@ -23,25 +23,23 @@
 | Bolt-Action Rifle | Mosin Nagant | 5 | 7.62x54mmR | 33% | https://static.wikia.nocookie.net/quarantine-aftermath/images/1/11/Mosin_Nagant_New.png/revision/latest?format=original |
 | Designated Marksman Rifle | SVD | 10 | 7.62x54mmR | 55% | https://static.wikia.nocookie.net/quarantine-aftermath/images/b/b4/SVD-NEW.png/revision/latest?format=original |
 | Anti-Materiel Rifle | AWM | 10 | .50 BMG | 75% | https://static.wikia.nocookie.net/quarantine-aftermath/images/f/fc/AWM-NEW.png/revision/latest?format=original |
-| Anti-Materiel Rifle | MRAD | 10 | .50 BMG | 72,5% | https://static.wikia.nocookie.net/quarantine-aftermath/images/2/26/MRAD-NEW.png/revision/latest?format=original |
+| Anti-Materiel Rifle | MRAD | 10 | .50 BMG | 72.5% | https://static.wikia.nocookie.net/quarantine-aftermath/images/2/26/MRAD-NEW.png/revision/latest?format=original |
 | Anti-Materiel Rifle | M82A1 | 10 | .50 BMG | 80% | https://static.wikia.nocookie.net/quarantine-aftermath/images/5/5b/M82A1-NEW.png/revision/latest?format=original |
 | Submachine Gun | Uzi | 32 | .22 LR | 10% | https://static.wikia.nocookie.net/quarantine-aftermath/images/f/f5/UZI-NEW.png/revision/latest?format=original |
 | Submachine Gun | MP5 | 30 | 9MM Pa. | 15% | https://static.wikia.nocookie.net/quarantine-aftermath/images/6/68/MP5-NEW.png/revision/latest?format=original |
 | Submachine Gun | UMP-45 | 25 | .45 ACP | 20% | https://static.wikia.nocookie.net/quarantine-aftermath/images/f/f5/UMP-NEW.png/revision/latest?format=original |
 | Submachine Gun | Makeshift SMG | 25 | .45 ACP | 10% | https://static.wikia.nocookie.net/quarantine-aftermath/images/f/fd/MS-2-NEW.png/revision/latest?format=original |
-| Grenade Launcher | M79 | 1 | 40mm Grenade | None. | https://static.wikia.nocookie.net/quarantine-aftermath/images/b/b7/M79.png/revision/latest?format=original |
+| Grenade Launcher | M79 | 1 | 40mm Grenade | 0 | https://static.wikia.nocookie.net/quarantine-aftermath/images/b/b7/M79.png/revision/latest?format=original |
 | Light Machine Gun | M249 | 150 | Rem .223 | 20% | https://static.wikia.nocookie.net/quarantine-aftermath/images/2/29/M249-NEW.png/revision/latest?format=original |
 | Light Machine Gun | PKM | 100 | 7.62x54mmR | 40% | https://static.wikia.nocookie.net/quarantine-aftermath/images/7/7b/PKM-NEW.png/revision/latest?format=original |
 | Pump-Action Shotgun | Mossberg 500 | 6 | 12 Gauge | 0 | https://static.wikia.nocookie.net/quarantine-aftermath/images/4/4b/MOSSBERG-NEW.png/revision/latest?format=original |
 | Pump-Action Shotgun | MP-133 | 6 | 12 Gauge | 0 | https://static.wikia.nocookie.net/quarantine-aftermath/images/f/fb/MP-133-NEW.png/revision/latest?format=original |
 | Double-Barrel Shotgun | Remington 1894 | 2 | 12 Gauge | 0 | https://static.wikia.nocookie.net/quarantine-aftermath/images/0/09/DB-NEW.png/revision/latest?format=original |
 | Double-Barrel Shotgun | Sawed Off Double Barrel | 2 | 12 Gauge | 0 | https://static.wikia.nocookie.net/quarantine-aftermath/images/c/cd/SAWED-OFF-NEW.png/revision/latest?format=original |
-| Combat shotgun | Saiga-12 | 10 | 12 Gauge | 0 | https://static.wikia.nocookie.net/quarantine-aftermath/images/b/b4/SAIGA-NEW.png/revision/latest?format=original |
+| Combat Shotgun | Saiga-12 | 10 | 12 Gauge | 0 | https://static.wikia.nocookie.net/quarantine-aftermath/images/b/b4/SAIGA-NEW.png/revision/latest?format=original |
 | Combat Shotgun | SPAS-12 | 6 | 12 Gauge | 0 | https://static.wikia.nocookie.net/quarantine-aftermath/images/8/8b/SPAS-12-NEW.png/revision/latest?format=original |
 | Combat Shotgun | Renelli M4 | 7 | 12 Gauge | 0 | https://static.wikia.nocookie.net/quarantine-aftermath/images/0/01/Renelli_M4.png/revision/latest?format=original |
-| NEW SHOTGUN | Makeshift Shotgun | 1 | 12 Gauge | 0 | https://static.wikia.nocookie.net/quarantine-aftermath/images/1/1e/Makeshift_Shotgun.png/revision/latest?format=original |
-| Submachine Gun / Dev Item | P90 | 50 | 9MM Pa. | 10% | https://static.wikia.nocookie.net/quarantine-aftermath/images/1/10/P90-NEW.png/revision/latest?format=original |
-| Assault Rifle / Dev Item | AK-47 | 30 | Rem .223 | 25% | https://static.wikia.nocookie.net/quarantine-aftermath/images/e/e1/AK-47-NEW.png/revision/latest?format=original |
+| Shotgun | Makeshift Shotgun | 1 | 12 Gauge | 0 | https://static.wikia.nocookie.net/quarantine-aftermath/images/1/1e/Makeshift_Shotgun.png/revision/latest?format=original |
 | Crossbow | T13 Crossbow | 1 | Arrow | 100% | https://static.wikia.nocookie.net/quarantine-aftermath/images/5/54/T13-NEW.png/revision/latest?format=original |
 | Bow | Recurve Bow | 1 | Arrow | 40% | https://static.wikia.nocookie.net/quarantine-aftermath/images/1/17/RECURVE-NEW.png/revision/latest?format=original |
 | Bow | Makeshift Bow | 1 | Arrow | 40% | https://static.wikia.nocookie.net/quarantine-aftermath/images/d/d4/MB-NEW.png/revision/latest?format=original |
@@ -51,8 +49,8 @@
 | Semi-Automatic Pistol | M9 | 15 | 9MM Pa. | 10% | https://static.wikia.nocookie.net/quarantine-aftermath/images/4/4c/M9-NEW.png/revision/latest?format=original |
 | Semi-Automatic Pistol | Makarov | 8 | 9MM Pa. | 10% | https://static.wikia.nocookie.net/quarantine-aftermath/images/a/ae/MAKAROV-NEW.png/revision/latest?format=original |
 | Semi-Automatic Pistol | P226 | 18 | 9MM Pa. | 10% | https://static.wikia.nocookie.net/quarantine-aftermath/images/f/fb/P226-NEW.png/revision/latest?format=original |
-| Semi-Automatic Pistol | Tec-9 | 20 | 9mm Pa. | 10% | https://static.wikia.nocookie.net/quarantine-aftermath/images/2/27/Tec9.png/revision/latest?format=original |
-| Semi-automatic Pistol | FNX-45 | 15 | .45 ACP | 15% | https://static.wikia.nocookie.net/quarantine-aftermath/images/f/f8/FNX-NEW.png/revision/latest?format=original |
+| Semi-Automatic Pistol | Tec-9 | 20 | 9MM Pa. | 10% | https://static.wikia.nocookie.net/quarantine-aftermath/images/2/27/Tec9.png/revision/latest?format=original |
+| Semi-Automatic Pistol | FNX-45 | 15 | .45 ACP | 15% | https://static.wikia.nocookie.net/quarantine-aftermath/images/f/f8/FNX-NEW.png/revision/latest?format=original |
 | Semi-Automatic Pistol | M1911 | 7 | .45 ACP | 15% | https://static.wikia.nocookie.net/quarantine-aftermath/images/d/d1/M1911-NEW.png/revision/latest?format=original |
 | Semi-Automatic Pistol | Desert Eagle | 9 | .44 Magnum | 40% | https://static.wikia.nocookie.net/quarantine-aftermath/images/7/77/DEAGLE-NEW.png/revision/latest?format=original |
 | Melee | Camp Axe | N/A | N/A | 50% | https://static.wikia.nocookie.net/quarantine-aftermath/images/7/76/CAMPAXE-NEW.png/revision/latest?format=original |

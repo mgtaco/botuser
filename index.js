@@ -18,7 +18,7 @@ const {
 
 const { shouldRespondAndReply } = require('./lib/groq');
 
-// Small web server for uptime checks on hosts like Railway.
+// Small web server for uptime checks.
 const PORT = Number(process.env.PORT) || 8000;
 const server = http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -48,9 +48,13 @@ const KNOWLEDGE_BASE_DIR = path.join(__dirname, 'knowledge');
 const KNOWLEDGE_FILE_EXTENSIONS = new Set(['.txt', '.md', '.csv', '.json', '.yaml', '.yml']);
 const KNOWLEDGE_STOP_WORDS = new Set([
   'a', 'an', 'and', 'are', 'as', 'at', 'be', 'bot', 'can', 'do', 'does', 'for',
-  'from', 'how', 'i', 'in', 'is', 'it', 'me', 'of', 'on', 'or', 'should',
-  'tell', 'the', 'there', 'to', 'use', 'what', 'whats', 'when', 'where',
-  'which', 'who', 'why', 'with', 'you', 'your',
+  'from', 'had', 'has', 'have', 'hello', 'hey', 'hi', 'how', 'i', 'if',
+  'in', 'is', 'it', 'just', 'me', 'my', 'nah', 'no', 'not', 'of', 'ok',
+  'okay', 'on', 'or', 'our', 'please', 'pls', 'should', 'so', 'sup',
+  'take', 'takes', 'tell', 'thanks', 'that', 'the', 'their', 'them', 'there',
+  'these', 'they', 'this', 'those', 'to', 'ty', 'use', 'uses', 'using',
+  'was', 'we', 'were', 'what', 'whats', 'when', 'where', 'which', 'who',
+  'why', 'with', 'yeah', 'yep', 'yes', 'yo', 'you', 'your',
 ]);
 const DISCORD_MESSAGE_LIMIT = 2000;
 
@@ -67,12 +71,17 @@ const client = new Client({
   ],
 });
 
-// Formats a Discord message for the chat model.
-function formatMessage(msg, botId, botName) {
+// Formats a user message for the chat model.
+function formatUserMessage(msg, botId, botName) {
   const name = msg.author?.username ?? 'Unknown';
   const content = (msg.content?.trim() || '(no text)')
     .replace(new RegExp(`<@!?${botId}>`, 'g'), `@${botName}`);
   return `${name}: ${content}`;
+}
+
+// Keeps assistant history as plain message text.
+function formatAssistantMessage(msg) {
+  return msg.content?.trim() || '(no text)';
 }
 
 // Uses the server nickname when the bot has one.
@@ -88,10 +97,16 @@ async function buildConversationMessages(channel, botId, botName) {
     (a, b) => a.createdTimestamp - b.createdTimestamp
   );
 
-  return sorted.map((msg) => ({
-    role: msg.author.id === botId ? 'assistant' : 'user',
-    content: formatMessage(msg, botId, botName),
-  }));
+  return sorted.map((msg) => {
+    const isBotMessage = msg.author.id === botId;
+
+    return {
+      role: isBotMessage ? 'assistant' : 'user',
+      content: isBotMessage
+        ? formatAssistantMessage(msg)
+        : formatUserMessage(msg, botId, botName),
+    };
+  });
 }
 
 // Fits selected knowledge chunks into the prompt budget.
@@ -141,11 +156,14 @@ async function getKnowledgeDirectory(guildId) {
   return null;
 }
 
-// Stores a chunk plus lowercase text used for keyword search.
-function makeKnowledgeEntry(file, text) {
+// Stores a chunk plus normalized text used for keyword search.
+function makeKnowledgeEntry(file, text, metadata = {}) {
+  const searchText = normalizeKnowledgeText(`${file}\n${text}`);
+
   return {
     text: `[${file}]\n${text}`,
-    searchText: `${file}\n${text}`.toLowerCase(),
+    searchText,
+    ...metadata,
   };
 }
 
@@ -169,10 +187,17 @@ function splitMarkdownTable(file, content) {
     const row = lines[i].trim();
     if (!row.startsWith('|')) continue;
 
-    chunks.push(makeKnowledgeEntry(
+    const text = [prefix, header, divider, row].filter(Boolean).join('\n');
+
+    chunks.push(makeKnowledgeEntry(file, text, {
+      type: 'table-row',
       file,
-      [prefix, header, divider, row].filter(Boolean).join('\n')
-    ));
+      prefix,
+      header,
+      divider,
+      row,
+      rowSearchText: normalizeKnowledgeText(row),
+    }));
   }
 
   return chunks;
@@ -248,13 +273,58 @@ async function readKnowledgeFiles(directory, recursive) {
   return knowledgeEntries;
 }
 
+// Normalizes text for forgiving keyword matches.
+function normalizeKnowledgeText(text) {
+  return text
+    .toLowerCase()
+    .replace(/([a-z]+)-(\d+)/g, '$1-$2 $1$2');
+}
+
+// Adds simple plural variants to search terms.
+function expandKnowledgeTerms(terms) {
+  const expanded = new Set(terms);
+
+  for (const term of terms) {
+    if (term.endsWith('s') && term.length > 3) {
+      expanded.add(term.slice(0, -1));
+    }
+  }
+
+  return [...expanded];
+}
+
 // Extracts simple search terms from the user message.
 function getKnowledgeTerms(query) {
-  return [...new Set(
-    (query.toLowerCase().match(/[a-z0-9][a-z0-9./'-]*/g) ?? [])
+  const terms = [...new Set(
+    (normalizeKnowledgeText(query).match(/[a-z0-9][a-z0-9./'-]*/g) ?? [])
       .map((term) => term.replace(/^['"]|['"]$/g, ''))
       .filter((term) => term.length > 1 && !KNOWLEDGE_STOP_WORDS.has(term))
   )];
+
+  return expandKnowledgeTerms(terms);
+}
+
+// Extracts exact terms worth checking against table rows.
+function getTableFilterTerms(query) {
+  return [...new Set(
+    (normalizeKnowledgeText(query).match(/[a-z0-9][a-z0-9./'-]*/g) ?? [])
+      .map((term) => term.replace(/^['"]|['"]$/g, ''))
+      .filter((term) => term.length > 1 && !KNOWLEDGE_STOP_WORDS.has(term))
+  )];
+}
+
+// Escapes user terms before building a regex.
+function escapeRegExp(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Matches useful terms while avoiding tiny words inside larger words.
+function hasKnowledgeTerm(text, term) {
+  if (term.length > 2 || /\d/.test(term)) {
+    return text.includes(term);
+  }
+
+  return new RegExp(`(^|[^a-z0-9])${escapeRegExp(term)}($|[^a-z0-9])`, 'i').test(text);
 }
 
 // Scores a chunk by how many query terms it contains.
@@ -262,11 +332,46 @@ function scoreKnowledgeEntry(entry, terms) {
   let score = 0;
 
   for (const term of terms) {
-    if (!entry.searchText.includes(term)) continue;
+    if (!hasKnowledgeTerm(entry.searchText, term)) continue;
     score += term.length > 3 ? 3 : 1;
   }
 
   return score;
+}
+
+// Rebuilds tables from rows that directly match the query.
+function selectTableRowGroups(entries, query) {
+  const terms = getTableFilterTerms(query);
+  if (!terms.length) return [];
+
+  const groups = new Map();
+
+  for (const entry of entries) {
+    if (entry.type !== 'table-row') continue;
+    if (!terms.some((term) => hasKnowledgeTerm(entry.rowSearchText, term))) continue;
+
+    const key = `${entry.file}\n${entry.header}`;
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        file: entry.file,
+        prefix: entry.prefix,
+        header: entry.header,
+        divider: entry.divider,
+        rows: [],
+      });
+    }
+
+    groups.get(key).rows.push(entry.row);
+  }
+
+  return [...groups.values()].map((group) => {
+    const table = [group.prefix, group.header, group.divider, ...group.rows]
+      .filter(Boolean)
+      .join('\n');
+
+    return `[${group.file}]\n${table}`;
+  });
 }
 
 // Picks the most relevant chunks for the latest message.
@@ -274,7 +379,9 @@ function selectKnowledgeEntries(entries, query) {
   const terms = getKnowledgeTerms(query);
   if (!terms.length) return [];
 
-  return entries
+  const tableGroups = selectTableRowGroups(entries, query);
+  const rankedEntries = entries
+    .filter((entry) => !tableGroups.length || entry.type !== 'table-row')
     .map((entry, index) => ({
       entry,
       index,
@@ -284,19 +391,56 @@ function selectKnowledgeEntries(entries, query) {
     .sort((a, b) => b.score - a.score || a.index - b.index)
     .slice(0, KNOWLEDGE_MAX_CHUNKS)
     .map((result) => result.entry.text);
+
+  return [...tableGroups, ...rankedEntries].slice(0, KNOWLEDGE_MAX_CHUNKS);
+}
+
+// Logs what the RAG search found for a message.
+function logKnowledgeRetrieval({ guildId, query, source, cacheHit, entries, selectedEntries, context }) {
+  console.log('\n[RAG] Message received');
+  console.log(`[RAG] Guild: ${guildId ?? 'DM'}`);
+  console.log(`[RAG] Query: ${query || '(empty)'}`);
+  console.log(`[RAG] Source: ${source?.directory ?? '(none)'}`);
+  console.log(`[RAG] Cache: ${cacheHit ? 'hit' : 'miss'}`);
+  console.log(`[RAG] Loaded chunks: ${entries.length}`);
+  console.log(`[RAG] Search terms: ${getKnowledgeTerms(query).join(', ') || '(none)'}`);
+  console.log(`[RAG] Table filter terms: ${getTableFilterTerms(query).join(', ') || '(none)'}`);
+  console.log(`[RAG] Retrieved chunks: ${selectedEntries.length}`);
+  console.log(`[RAG] Context chars: ${context.length}/${KNOWLEDGE_CONTEXT_CHAR_LIMIT}`);
+
+  if (!context) {
+    console.log('[RAG] Retrieved knowledge: (none)\n');
+    return;
+  }
+
+  console.log(`[RAG] Retrieved knowledge sent to model:\n${context}\n[RAG] End retrieved knowledge\n`);
 }
 
 // Builds the RAG context for this server and message.
 async function buildKnowledgeContext(guildId, query) {
   const cacheKey = guildId ?? 'default';
   const cached = knowledgeCache.get(cacheKey);
+  let source = cached?.source ?? null;
+  let cacheHit = false;
 
   let entries;
   if (cached?.expiresAt > Date.now()) {
+    cacheHit = true;
     entries = cached.entries;
   } else {
-    const source = await getKnowledgeDirectory(guildId);
-    if (!source) return '';
+    source = await getKnowledgeDirectory(guildId);
+    if (!source) {
+      logKnowledgeRetrieval({
+        guildId,
+        query,
+        source,
+        cacheHit,
+        entries: [],
+        selectedEntries: [],
+        context: '',
+      });
+      return '';
+    }
 
     try {
       entries = await readKnowledgeFiles(source.directory, source.recursive);
@@ -308,12 +452,22 @@ async function buildKnowledgeContext(guildId, query) {
     knowledgeCache.set(cacheKey, {
       expiresAt: Date.now() + KNOWLEDGE_CACHE_TTL_MS,
       entries,
+      source,
     });
   }
 
-  const context = limitKnowledgeEntries(
-    selectKnowledgeEntries(entries, query)
-  );
+  const selectedEntries = selectKnowledgeEntries(entries, query);
+  const context = limitKnowledgeEntries(selectedEntries);
+
+  logKnowledgeRetrieval({
+    guildId,
+    query,
+    source,
+    cacheHit,
+    entries,
+    selectedEntries,
+    context,
+  });
 
   return context;
 }
@@ -342,10 +496,53 @@ function splitDiscordMessage(content) {
   return chunks;
 }
 
+// Checks whether a URL is likely to create an image preview.
+function isImagePreviewUrl(url) {
+  return /\.(png|jpe?g|gif|webp|avif)(?:[/?#]|$)/i.test(url);
+}
+
+// Detects image links that Discord can preview.
+function hasImagePreviewLink(content) {
+  const linkPattern = /\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)|(https?:\/\/[^\s<>)]+)/g;
+  let match;
+
+  while ((match = linkPattern.exec(content)) !== null) {
+    const url = match[2] ?? match[3];
+    if (isImagePreviewUrl(url)) return true;
+  }
+
+  return false;
+}
+
+// Splits after image-link lines so previews stay with the item text.
+function splitReplyAfterImageLinkLines(content) {
+  const messages = [];
+  const pending = [];
+
+  const flushPending = () => {
+    const text = pending.join('\n').trim();
+    pending.length = 0;
+    if (text) messages.push(text);
+  };
+
+  for (const line of content.split('\n')) {
+    pending.push(line);
+
+    if (hasImagePreviewLink(line)) {
+      flushPending();
+    }
+  }
+
+  flushPending();
+  return messages.length ? messages : [content];
+}
+
 // Sends one or more Discord messages for a reply.
 async function sendReply(channel, reply) {
-  for (const chunk of splitDiscordMessage(reply)) {
-    await channel.send(chunk);
+  for (const message of splitReplyAfterImageLinkLines(reply)) {
+    for (const chunk of splitDiscordMessage(message)) {
+      await channel.send(chunk);
+    }
   }
 }
 
@@ -392,6 +589,10 @@ client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
   if (RESPONSE_CHANNEL_IDS.size && !RESPONSE_CHANNEL_IDS.has(message.channelId)) return;
 
+  console.log(
+    `\n[Discord] ${message.author.tag} in ${message.guild?.name ?? 'DM'}/${message.channel?.name ?? message.channelId}: ${message.content || '(no text)'}`
+  );
+
   const botName = getBotDisplayName(message);
 
   const turns = await buildConversationMessages(
@@ -423,25 +624,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
   await interaction.deferReply({ ephemeral: true }).catch(() => {});
   const channel = interaction.channel;
 
-  const sendChannelMessage = async (content) => {
-    if (typeof channel?.send !== 'function') return;
-    await channel.send(content).catch(() => {});
+  const sendClearResponse = async (content) => {
+    await interaction.editReply(content).catch(() => {});
   };
 
   if (typeof channel?.bulkDelete !== 'function') {
-    await sendChannelMessage("Can't clear messages in this channel.");
-    await interaction.deleteReply().catch(() => {});
+    await sendClearResponse("Can't clear messages in this channel.");
     return;
   }
 
   try {
     const deleted = await channel.bulkDelete(100, true);
-    await sendChannelMessage(`Cleared ${deleted.size} message(s).`);
+    await sendClearResponse(`Cleared ${deleted.size} message(s).`);
   } catch (err) {
     console.error('Clear error:', err.message);
-    await sendChannelMessage(`Failed: ${err.message}`);
-  } finally {
-    await interaction.deleteReply().catch(() => {});
+    await sendClearResponse(`Failed: ${err.message}`);
   }
 });
 

@@ -5,6 +5,7 @@ const { PORT } = require('./lib/config');
 const { startHealthServer } = require('./lib/health');
 const { createDiscordClient } = require('./lib/discord/client');
 const { handleClearInteraction } = require('./lib/commands/clear');
+const { handleConfigInteraction } = require('./lib/commands/config');
 const { handleClientReady } = require('./lib/discord/readyHandler');
 const { handleMessageCreate } = require('./lib/discord/messageHandler');
 
@@ -32,7 +33,10 @@ client.on(Events.MessageCreate, (message) => {
 });
 
 client.on(Events.InteractionCreate, (interaction) => {
-  handleClearInteraction(interaction).catch((err) => {
+  Promise.all([
+    handleClearInteraction(interaction),
+    handleConfigInteraction(interaction),
+  ]).catch((err) => {
     console.error('Interaction handler error:', err.message);
   });
 });
